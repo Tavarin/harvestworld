@@ -5,6 +5,10 @@
 <title>Harvest World Game Test</title>
 
 <style type='text/css'>
+a {
+  opacity:0.6;
+}
+
 @font-face {
     font-family: "Juice";
     src: url("fonts/Juice.TTF");
@@ -12,10 +16,6 @@
 @font-face {
     font-family: "Brennan";
     src: url("fonts/Brennan.TTF");
-}
-
-a {
-  opacity:0.6;
 }
 
 a:hover {
@@ -69,9 +69,9 @@ body {
 .clock {
   font-size:24px;
   position:absolute;
+  z-index:8;
   top:0px;
   left:0px;
-  z-index:8;
   width:96px;
   height:62px;
   text-align:center;
@@ -102,7 +102,7 @@ body {
 .tool {
   position:absolute;
   left:439px;
-  top:277px;
+  top:279px;
   z-index:6;
 }
 
@@ -136,21 +136,21 @@ body {
 }
 
 .backDiv {
-  width:1568px;
-  height:1120px;
+  width:2208px;
+  height:1760px;
   position:absolute;
-  left:-448px;
-  top:-288px;
+  left:-672px;
+  top:-1312px;
   z-index:0;
-  background-image:url(farmBackground.png);
+  background-image:url(townBackground.png);
 }
 
 .floorDiv {
   width:928px;
   height:608px;
   position:absolute;
-  left:-160px;
-  top:-96px;
+  left:-384px;
+  top:-1120px;
   z-index:1;
 }
 
@@ -158,8 +158,8 @@ body {
   width:928px;
   height:608px;
   position:absolute;
-  left:-160px;
-  top:-96px;
+  left:-384px;
+  top:-1120px;
   z-index:2;
 }
 
@@ -167,8 +167,8 @@ body {
   width:928px;
   height:608px;
   position:absolute;
-  left:-160px;
-  top:-96px;
+  left:-384px;
+  top:-1120px;
   z-index:3;
 }
 
@@ -176,8 +176,8 @@ body {
   width:928px;
   height:1120px;
   position:absolute;
-  left:-160px;
-  top:-280px;
+  left:-384px;
+  top:-1312px;
   z-index:4;
 }
 
@@ -201,14 +201,14 @@ body {
   opacity:0.4;
 }
 
-.storageDiv {
+.storeDiv {
   position:absolute;
   top:0px;
-  left:408px;
-  width:200px;
+  left:144px;
+  width:320px;
   height:288px;
   z-index:8;
-  background-image:url(storage.png);
+  background-image:url(store.png);
   font-size:13px;
   font-family:"Brennan";
 }
@@ -216,7 +216,7 @@ body {
 .storBackDiv {
   position:absolute;
   top:26px;
-  left:6px;
+  left:222px;
   width:92px;
   height:236px;
   overflow:hidden;
@@ -225,13 +225,13 @@ body {
 .storDiv {
   position:absolute;
   top:26px;
-  left:106px;
-  width:92px;
+  left:6px;
+  width:210px;
   height:236px;
   overflow:hidden;
 }
 
-.storage {
+.store {
   float:left;
   width:26px;
 }
@@ -274,7 +274,7 @@ body {
   left:125px;
   width:357px;
   height:135px;
-  z-index:9;
+  z-index:8;
   background-color:#FF0004;
   background-image:url(messageBack.png);
   text-align:center;
@@ -301,9 +301,16 @@ body {
 <script type='text/javascript'>
 
 var boundUp = 192;
-var boundRight = -672;
-var boundDown = -480;
+var boundRight = -1312;
+var boundDown = -1120;
 var boundLeft = 288;
+
+var farmWalls = [];
+var farmFloors = [];
+var farmObjects = [];
+var farmCrops = [];
+var farmNPCs = [];
+var farmAnimals = [];
 
 <? include('loadAssets.php'); ?>
 
@@ -329,14 +336,19 @@ function checkAction() {
       dismount(animal[2],animal[3]);
     }
   } else {
-    if (coorX == 17 && coorY == -1) {
-      whichBox = 'Shipping';
-      openStorage();
+    if (coorX == 14 && coorY == 30) {
+      whichBox = 'Seeds';
+      openStore();
     }
   
-    if (coorX == 18 && coorY == -1) {
-      whichBox = 'Storage';
-      openStorage();
+    if (coorX == 28 && coorY == 29) {
+      whichBox = 'Building';
+      openStore();
+    }
+     
+    if (coorX == 36 && coorY == 30) {
+      whichBox = 'Household';
+      openStore();
     }
   
     if (coorX > -1 && coorY > -1) {
@@ -352,10 +364,6 @@ function checkAction() {
           } else if (object[0] == 'toilet' && object[1] == coorX && object[2] == coorY) {
             useBathroom = true;
             useToilet(n,coorX,coorY);
-            break;
-          } else if (object[0] == 'shower' && object[1] == coorX && object[2] == coorY) {
-            takeShower = true;
-            useShower(n,coorX,coorY);
             break;
           }
         }
@@ -377,7 +385,7 @@ function checkAction() {
         var animal = animals[n];
 	      if (animal[2] == coorX && animal[3] == coorY) {
           if (animal[0] == 'horse' && mountable == true) {
-             mountHorse(coorX,coorY,animal[5]); 
+            mountHorse(coorX,coorY,animal[5]); 
           }
         }
       }
@@ -389,11 +397,9 @@ function checkAction() {
 
 function displayCoordinates() {
   var coorX = (288 - parseInt(floorScreen.style.left))/32;
-  var coorY = (184 - parseInt(floorScreen.style.top))/32;
+  var coorY = (192 - parseInt(floorScreen.style.top))/32;
   
-  var horse = animals[0];
-  
-  document.getElementById('currCoordinates').innerHTML = coorX + "," + coorY + "<br />" + horse[2] + "," + horse[3];
+  document.getElementById('currCoordinates').innerHTML = coorX + "," + coorY;
   setTimeout('displayCoordinates()', 250);
 }
 
@@ -402,14 +408,13 @@ function displayCoordinates() {
 <script src='scripts/variables.js'></script>
 <script src='scripts/clock.js'></script>
 <script src='scripts/movement.js'></script>
-<script src='scripts/storage.js'></script>
+<script src='scripts/shop.js'></script>
 <script src='scripts/crops.js'></script>
 <script src='scripts/redrawWorld.js'></script>
-<script src='scripts/construction.js'></script>
 <script src='scripts/otherFunctions.js'></script>
 <script src='scripts/npcs.js'></script>
 <script src='scripts/npcDialogue.js'></script>
-<script src='scripts/fishing.js'></script>
+<script src='scripts/townObjects.js'></script>
 <script src='scripts/mobileControls.js'></script>
 <script src='scripts/controls.js'></script>
 <script src='scripts/cinematics.js'></script>
@@ -420,15 +425,11 @@ function displayCoordinates() {
 
 <body onkeydown='whichKeyDown(event)' onkeyup='whichKeyUp(event)' onLoad='loadAssets()'>
 
-<div class='assetBox'><img src='farmBackground.png' class='assetImage' /><img src='farmBackground1.png' class='assetImage' /></div>
-
 <img src='loadingFront.png' class='loadBarFront' id='loadBarFront' style='opacity:1;' />
 <img src='loadingBack.png' class='loadBarBack' id='loadBarBack' style='opacity:1;width:0px;height:15px;' />
 <img src='loadingImage.png' class='loadBarImage' id='loadBarImage' style='opacity:1;' />
 
-<img src='player/playerDS.png' class='player' id='player' />
-<img class='currentItem' id='currentItem' style='opacity:0.3;' />
-<img class='tool' id='tool' style='left:439px;' />
+<img src='player/playerUS.png' class='player' id='player' />
 
 <div id='mobileDiv' class='mobileDiv' style='opacity:0;'>
   <img src='mobileControls.png' id='mobileImage' usemap='#mobileControls' />
@@ -455,19 +456,19 @@ function displayCoordinates() {
     $1000
   </div>
   
-  <div class='backDiv' id='backScreen' style='top:0px;left:-448px;background-image:url(farmBackground.png);'>
+  <div class='backDiv' id='backScreen' style='top:-1312px;left:-672px;background-image:url(townBackground.png);'>
   </div>
   
-  <div class='floorDiv' id='floorScreen' style='top:192px;left:-160px;'>
+  <div class='floorDiv' id='floorScreen' style='top:-1120px;left:-384px;'>
   </div>
 
-  <div class='wallDiv' id='wallScreen' style='top:192px;left:-160px;'>
+  <div class='wallDiv' id='wallScreen' style='top:-1120px;left:-384px;'>
   </div>
 
-  <div class='objectDiv' id='objectScreen' style='top:192px;left:-160px;'>
+  <div class='objectDiv' id='objectScreen' style='top:-1120px;left:-384px;'>
   </div>
   
-  <div class='npcDiv' id='npcScreen' style='top:8px;left:-160px;'>
+  <div class='npcDiv' id='npcScreen' style='top:-1312px;left:-384px;'>
   </div>
   
   <div class='needsDiv' id='needs'>
@@ -486,10 +487,10 @@ function displayCoordinates() {
   <div class='messageDiv' id='messageDiv' style='opacity:0;'>
   </div>
   
-  <div class='storageDiv' id='storageDiv' style='opacity:0;'>
+  <div class='storeDiv' id='storeDiv' style='opacity:0;'>
     <div style='position:absolute;top:7px;left:4px;' id='storTitleDiv'>
     </div>
-    <div style='position:absolute;top:7px;left:104px;' id='storTitleDiv1'>
+    <div style='position:absolute;top:7px;left:244px;' id='storTitleDiv1'>
     </div>
     <div class='storBackDiv' id='storBackDiv'>
       <div class='storBackInner' id='storBackInner' style='position:absolute;top:0px;left:0px;'>
@@ -501,8 +502,9 @@ function displayCoordinates() {
       </div>
     </div>
     
-    <img src='storageArrow.png' style='position:absolute;top:260px;left:15px;opacity:0.3;' id='storBackArrow' />
-    <img src='storageArrow.png' style='position:absolute;top:260px;left:115px;opacity:0.3;' id='storArrow' />
+    <img src='storageArrow.png' style='position:absolute;top:260px;left:0px;opacity:0.3;' id='storArrow' />
+    <div id='totalCost' style='position:absolute;top:265px;left:80px;'>Total Cost $0</div>
+    <img src='storageArrow.png' style='position:absolute;top:260px;left:230px;opacity:0.3;' id='storBackArrow' />
   </div>
 </div>
 
@@ -515,13 +517,9 @@ function displayCoordinates() {
 <span id='soundEffects' >
 </span>
 
-<b><a onclick='mobileHide()'>Show/Hide Mobile Controls</a></b><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
+<b><a onclick='mobileHide()'>Show/Hide Mobile Controls</a></b><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
 <br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
 <p style='font-size:14px;font-family:Verdana;'>
-<b><a onclick='saveGame()'>SAVE GAME</a></b><br />
-<b><a onclick='deleteGame()'>DELETE GAME</a></b><br />
-Games are saved in local storage, your browser must support local storage to save your game.<br />
-To load a saved game refresh the page.<br />
 <br /><br />
 For more information visit the game's <a href='documentation/index.php'>Documentation</a>.
 <br /><br />
@@ -570,7 +568,7 @@ All other art and assets made by Tavarin Web Design
   var tool = document.getElementById('tool');
   var soundEffects = document.getElementById('soundEffects');
   
-  var storageDiv = document.getElementById('storageDiv');
+  var storeDiv = document.getElementById('storeDiv');
   var storBackDiv = document.getElementById('storBackInner');
   var storDiv = document.getElementById('storInner');
   
